@@ -28,6 +28,7 @@ export default [
 
 			route('/users', 'routes/users/overview.tsx'),
 			route('/acls', 'routes/acls/overview.tsx'),
+			route('/ip-whitelist', 'routes/ip-whitelist/overview.tsx'),
 			route('/dns', 'routes/dns/overview.tsx'),
 
 			...prefix('/settings', [

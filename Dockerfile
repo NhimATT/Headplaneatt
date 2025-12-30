@@ -1,4 +1,4 @@
-FROM --platform=$BUILDPLATFORM golang:1.25.1 AS go-base
+FROM golang:1.25.1 AS go-base
 WORKDIR /run
 
 COPY go.mod go.sum build.sh ./
@@ -9,7 +9,7 @@ COPY internal/ ./internal/
 
 ARG TARGETOS
 ARG TARGETARCH
-ARG IMAGE_TAG
+ARG IMAGE_TAG=custom
 RUN GOOS=$TARGETOS GOARCH=$TARGETARCH CGO_ENABLED=0 IMAGE_TAG=$IMAGE_TAG \
 	./build.sh --wasm --agent --fake-shell \
 		--wasm-output /bin/hp_ssh.wasm \
@@ -23,7 +23,7 @@ RUN chmod +x /bin/fake-sh
 # Folder needs to exist for later stages
 RUN mkdir -p /var/lib/headplane/agent
 
-FROM --platform=$BUILDPLATFORM node:22.16-slim AS js-base
+FROM node:22-alpine AS node-base
 WORKDIR /run
 
 RUN corepack enable
@@ -38,9 +38,9 @@ COPY . .
 RUN ./build.sh --app
 
 FROM gcr.io/distroless/nodejs22-debian12:latest AS final
-COPY --from=js-base /run/build /app/build
-COPY --from=js-base /run/drizzle /app/drizzle
-COPY --from=js-base /run/node_modules /app/node_modules
+COPY --from=node-base /run/build /app/build
+COPY --from=node-base /run/drizzle /app/drizzle
+COPY --from=node-base /run/node_modules /app/node_modules
 
 COPY --from=go-base /bin/hp_agent /usr/libexec/headplane/agent
 COPY --from=go-base /var/lib/headplane /var/lib/headplane
@@ -55,9 +55,9 @@ CMD [ "/app/build/server/index.js" ]
 FROM node:22-alpine AS debug-shell
 RUN apk add --no-cache bash curl
 
-COPY --from=js-base /run/build /app/build
-COPY --from=js-base /run/drizzle /app/drizzle
-COPY --from=js-base /run/node_modules /app/node_modules
+COPY --from=node-base /run/build /app/build
+COPY --from=node-base /run/drizzle /app/drizzle
+COPY --from=node-base /run/node_modules /app/node_modules
 
 COPY --from=go-base /bin/hp_agent /usr/libexec/headplane/agent
 COPY --from=go-base /var/lib/headplane /var/lib/headplane

@@ -29,3 +29,21 @@ export const users = sqliteTable('users', {
 
 export type User = typeof users.$inferSelect;
 export type UserInsert = typeof users.$inferInsert;
+
+// IP Whitelist table
+export const ipWhitelist = sqliteTable('ip_whitelist', {
+	id: text('id').primaryKey(),
+	ipAddress: text('ip_address').notNull().unique(),
+	description: text('description').notNull(),
+	enabled: integer('enabled', { mode: 'boolean' }).notNull().default(true),
+	createdBy: text('created_by').notNull(),
+	createdAt: integer('created_at', { mode: 'timestamp' })
+		.notNull()
+		.$defaultFn(() => new Date()),
+	updatedAt: integer('updated_at', { mode: 'timestamp' })
+		.notNull()
+		.$defaultFn(() => new Date()),
+});
+
+export type IpWhitelist = typeof ipWhitelist.$inferSelect;
+export type IpWhitelistInsert = typeof ipWhitelist.$inferInsert;

@@ -103,6 +103,56 @@ export default createHonoServer({
 		app.use(__PREFIX__, async (c) => {
 			return c.redirect(`${__PREFIX__}/`);
 		});
+
+		// IP Whitelist API routes
+		app.get('/api/ip-whitelist', async (c) => {
+			const { db } = await c.get('context');
+			const { ipWhitelist } = await import('./db/schema');
+			const { desc } = await import('drizzle-orm');
+			try {
+				const entries = await db
+					.select()
+					.from(ipWhitelist)
+					.orderBy(desc(ipWhitelist.createdAt));
+				return c.json({ success: true, data: entries });
+			} catch (error: unknown) {
+				return c.json({ success: false, error: error.message }, 500);
+			}
+		});
+
+		app.post('/api/ip-whitelist', async (c) => {
+			const { db } = await c.get('context');
+			const { ipWhitelist } = await import('./db/schema');
+			try {
+				const body = await c.req.json();
+				const [entry] = await db
+					.insert(ipWhitelist)
+					.values({
+						id: crypto.randomUUID(),
+						ipAddress: body.ipAddress,
+						description: body.description,
+						enabled: body.enabled ?? true,
+						createdBy: body.createdBy || 'admin',
+					})
+					.returning();
+				return c.json({ success: true, data: entry }, 201);
+			} catch (error: unknown) {
+				return c.json({ success: false, error: error.message }, 500);
+			}
+		});
+
+		app.delete('/api/ip-whitelist/:id', async (c) => {
+			const { db } = await c.get('context');
+			const { ipWhitelist } = await import('./db/schema');
+			const { eq } = await import('drizzle-orm');
+			try {
+				const id = c.req.param('id');
+				await db.delete(ipWhitelist).where(eq(ipWhitelist.id, id));
+				return c.json({ success: true });
+			} catch (error: unknown) {
+				return c.json({ success: false, error: error.message }, 500);
+			}
+		});
 	},
 	serveStaticOptions: {
 		publicAssets: {
