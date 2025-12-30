@@ -108,10 +108,9 @@ export default createHonoServer({
 		app.get('/api/ip-whitelist', async (c) => {
 			try {
 				const context = c.get('context') as typeof appLoadContext;
-				const { db } = context;
 				const { ipWhitelist } = await import('./db/schema');
 				const { desc } = await import('drizzle-orm');
-				const entries = await db
+				const entries = await context.db
 					.select()
 					.from(ipWhitelist)
 					.orderBy(desc(ipWhitelist.createdAt));
@@ -130,10 +129,9 @@ export default createHonoServer({
 		app.post('/api/ip-whitelist', async (c) => {
 			try {
 				const context = c.get('context') as typeof appLoadContext;
-				const { db } = context;
 				const { ipWhitelist } = await import('./db/schema');
 				const body = await c.req.json();
-				const [entry] = await db
+				const [entry] = await context.db
 					.insert(ipWhitelist)
 					.values({
 						id: crypto.randomUUID(),
@@ -158,11 +156,10 @@ export default createHonoServer({
 		app.delete('/api/ip-whitelist/:id', async (c) => {
 			try {
 				const context = c.get('context') as typeof appLoadContext;
-				const { db } = context;
 				const { ipWhitelist } = await import('./db/schema');
 				const { eq } = await import('drizzle-orm');
 				const id = c.req.param('id');
-				await db.delete(ipWhitelist).where(eq(ipWhitelist.id, id));
+				await context.db.delete(ipWhitelist).where(eq(ipWhitelist.id, id));
 				return c.json({ success: true });
 			} catch (error: unknown) {
 				return c.json(
