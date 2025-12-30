@@ -110,7 +110,7 @@ export default createHonoServer({
 				const context = c.get('context') as typeof appLoadContext;
 				const { ipWhitelist } = await import('./db/schema');
 				const { desc } = await import('drizzle-orm');
-				const entries = await context.db
+				const entries = await db
 					.select()
 					.from(ipWhitelist)
 					.orderBy(desc(ipWhitelist.createdAt));
@@ -131,7 +131,7 @@ export default createHonoServer({
 				const context = c.get('context') as typeof appLoadContext;
 				const { ipWhitelist } = await import('./db/schema');
 				const body = await c.req.json();
-				const [entry] = await context.db
+				const [entry] = await db
 					.insert(ipWhitelist)
 					.values({
 						id: crypto.randomUUID(),
@@ -159,7 +159,7 @@ export default createHonoServer({
 				const { ipWhitelist } = await import('./db/schema');
 				const { eq } = await import('drizzle-orm');
 				const id = c.req.param('id');
-				await context.db.delete(ipWhitelist).where(eq(ipWhitelist.id, id));
+				await db.delete(ipWhitelist).where(eq(ipWhitelist.id, id));
 				return c.json({ success: true });
 			} catch (error: unknown) {
 				return c.json(
