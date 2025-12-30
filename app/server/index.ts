@@ -106,24 +106,32 @@ export default createHonoServer({
 
 		// IP Whitelist API routes
 		app.get('/api/ip-whitelist', async (c) => {
-			const { db } = await c.get('context');
-			const { ipWhitelist } = await import('./db/schema');
-			const { desc } = await import('drizzle-orm');
 			try {
+				const context = c.get('context') as typeof appLoadContext;
+				const { db } = context;
+				const { ipWhitelist } = await import('./db/schema');
+				const { desc } = await import('drizzle-orm');
 				const entries = await db
 					.select()
 					.from(ipWhitelist)
 					.orderBy(desc(ipWhitelist.createdAt));
 				return c.json({ success: true, data: entries });
 			} catch (error: unknown) {
-				return c.json({ success: false, error: error.message }, 500);
+				return c.json(
+					{
+						success: false,
+						error: error instanceof Error ? error.message : 'Unknown error',
+					},
+					500,
+				);
 			}
 		});
 
 		app.post('/api/ip-whitelist', async (c) => {
-			const { db } = await c.get('context');
-			const { ipWhitelist } = await import('./db/schema');
 			try {
+				const context = c.get('context') as typeof appLoadContext;
+				const { db } = context;
+				const { ipWhitelist } = await import('./db/schema');
 				const body = await c.req.json();
 				const [entry] = await db
 					.insert(ipWhitelist)
@@ -137,20 +145,33 @@ export default createHonoServer({
 					.returning();
 				return c.json({ success: true, data: entry }, 201);
 			} catch (error: unknown) {
-				return c.json({ success: false, error: error.message }, 500);
+				return c.json(
+					{
+						success: false,
+						error: error instanceof Error ? error.message : 'Unknown error',
+					},
+					500,
+				);
 			}
 		});
 
 		app.delete('/api/ip-whitelist/:id', async (c) => {
-			const { db } = await c.get('context');
-			const { ipWhitelist } = await import('./db/schema');
-			const { eq } = await import('drizzle-orm');
 			try {
+				const context = c.get('context') as typeof appLoadContext;
+				const { db } = context;
+				const { ipWhitelist } = await import('./db/schema');
+				const { eq } = await import('drizzle-orm');
 				const id = c.req.param('id');
 				await db.delete(ipWhitelist).where(eq(ipWhitelist.id, id));
 				return c.json({ success: true });
 			} catch (error: unknown) {
-				return c.json({ success: false, error: error.message }, 500);
+				return c.json(
+					{
+						success: false,
+						error: error instanceof Error ? error.message : 'Unknown error',
+					},
+					500,
+				);
 			}
 		});
 	},
